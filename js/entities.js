@@ -1,5 +1,5 @@
-var enemy_type = ['dude','monster', 'sancho'];
-var enemy_props = function(type) {
+var enemyType = ['dude','monster', 'sancho'];
+var enemyProps = function(type) {
 	var x = {
 		'dude': {
 			health: 10,
@@ -20,25 +20,25 @@ var enemy_props = function(type) {
 	return x[type];
 };
 
-var tower_type = ['tower1', 'tower2', 'tower3'];
-var tower_props = function(type) {
+var towerType = ['tower1', 'tower2', 'tower3'];
+var towerProps = function(type) {
 	var x = {
 		'tower1': {
 			speed: 0.035,
-			dist_range: 2*48,
-			ang_range: 80,
+			distRange: 2*48,
+			angRange: 80,
 			power: 1
 		},
 		'tower2': {
 			speed: 0.015,
-			dist_range: 3*48,
-			ang_range: 40,
+			distRange: 3*48,
+			angRange: 40,
 			power: 3
 		},
     'tower3': {
       speed: 0.025,
-      dist_range: 3*48,
-      ang_range: 60,
+      distRange: 3*48,
+      angRange: 60,
       power: 5
     }
 	};
@@ -53,7 +53,7 @@ function Enemy(x, y, type) {
 
 	enemy.enableBody = true;
   enemy.dirty = false;
-	enemy.props = enemy_props(type);
+	enemy.props = enemyProps(type);
 
 	//  Player physics properties.
 	//this.enemy.anchor.x = 0.5;
@@ -77,6 +77,8 @@ function Enemy(x, y, type) {
     if(this.dirty) this.updatePath();
 
     if(this.path) {
+
+      var state = = game.state.getCurrentState();
 
       // Got places to go
       if(this.path.length > 0){
@@ -108,7 +110,6 @@ function Enemy(x, y, type) {
 
       } else {
         // Reached end?
-        var state = game.state.getCurrentState();
         if(state.endTile.x == Math.round(this.body.position.x/TILEWIDTH) && state.endTile.y == Math.round(this.body.position.y/TILEHEIGHT)){
           // Stop
           this.body.velocity.x = 0;
@@ -120,7 +121,6 @@ function Enemy(x, y, type) {
       }
 
 			if(this.props.health < 0) {
-        var state = game.state.getCurrentState();
         state.enemiesLeft -= 1;
 				this.destroy();
         score += this.props.score;
@@ -196,7 +196,7 @@ function Tower(x, y, type) {
 	tower.animations.add("11_fire", [276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299], 30, true);
 	tower.animations.play("0_idle");
 
-	tower.props = tower_props(type);
+	tower.props = towerProps(type);
 
 	tower.line = new Phaser.Line(0,0,0,0);
 
@@ -206,7 +206,7 @@ function Tower(x, y, type) {
 
 	tower.findEnemiesInRange = function(enemies) {
 		//linear distance.
-		console.log(enemies.children.length)
+
 		var inrange = enemies.children.some(function(a) {
 
 			this.line.start = this.position;
@@ -214,8 +214,8 @@ function Tower(x, y, type) {
 
 			var angle = 180 - Math.abs(Math.abs(((180*this.line.angle)/Math.PI) - ((180*this.direction)/Math.PI)) - 180);
 
-			if(this.line.width < this.props.dist_range) {
-				if(angle < (this.props.ang_range/2)) {
+			if(this.line.width < this.props.distRange) {
+				if(angle < (this.props.angRange/2)) {
 
 					a.reduceHealth(this.props.power);
 					return true;
@@ -234,7 +234,7 @@ function Tower(x, y, type) {
 		var angle = ((360 + (180*this.direction/Math.PI)) % 360) - 15;
 
 		var frame = Math.round(angle/30);
-		var mode = this.findEnemiesInRange(state.enemies) ? "fire" : "idle"
+		var mode = this.findEnemiesInRange(state.enemies) ? "fire" : "idle";
 		this.animations.play(frame+"_"+mode);
 	};
 
@@ -249,7 +249,7 @@ function createTower(x, y, type) {
 		findPathTo(state.startTile.x,state.startTile.y,state.endTile.x,state.endTile.y, function(path) {
 			if(path) {
 				state.towers.add(Tower(x, y, tower_type[type]));
-				state.enemies.forEach(a => {a.dirty = true});
+				state.enemies.forEach(a => {a.dirty = true;});
 			} else {
 				updateGrid(y, x, -1);
 				console.log("UNABLE TO COMPLY, BUILDING IN PROGESS");
