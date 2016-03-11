@@ -18,7 +18,7 @@ function boot() {
       pathfinder = game.plugins.add(Phaser.Plugin.PathFinderPlugin);
       game.stage.backgroundColor = '#CCCCCC';
       game.physics.startSystem(Phaser.Physics.ARCADE);
-      setTimeout(function() {game.state.start('logo');}, 1000);
+      setTimeout(function() {game.state.start('level1');}, 1000);
     },
   };
 }
@@ -129,7 +129,7 @@ function level1() {
     enemiesLeft: 0,
     waves: [
       {
-        delay: 1000, monsters: [2,0,0,0,0]
+        delay: 1000, monsters: [2]
       },
       {
         delay: 700, monsters: [0,0,0,0,0]
@@ -185,6 +185,7 @@ function level1() {
       //game.debug.text("Left Button: " + game.input.activePointer.leftButton.isDown, 300, 132);
       game.debug.text(lives, 884, 43);
       game.debug.text(score, 544, 43);
+      this.towers.children.forEach(a => a.render());
     },
 
     update: function () {
