@@ -115,6 +115,9 @@ function intro() {
     },
     update: function() {
       x.update();
+			if(game.input.activePointer.leftButton.isDown){
+				game.state.start('level1');
+			}
     }
   };
 }
