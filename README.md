@@ -1,9 +1,10 @@
 
 ##TWIST'ed TOWERS
-####Porto Graphics Game Jam 2016 entry
+###A Tower Defense game
+####Forked from our Porto Graphics Game Jam 2016 entry
 
 See it working at:
-http://vascomotaborges.github.io/porto-graphics-game-jam-2016/
+http://sharewareteam.github.io/twisted-towers/
 
 #####by Team ShareWare
 - Vasco Borges
