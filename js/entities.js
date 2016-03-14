@@ -78,7 +78,7 @@ function Enemy(x, y, type) {
   enemy.animations.add("left", [60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89], 30, true);
   enemy.animations.add("up", [90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119], 30, true);
 
-  var state = game.state.getCurrentState();
+  enemy.state = game.state.getCurrentState();
   findPathTo((x/TILEWIDTH)|0,(y/TILEHEIGHT)|0,state.endTile.x,state.endTile.y, (function(path) {
     this.path = path;
   }).bind(enemy));
@@ -88,8 +88,6 @@ function Enemy(x, y, type) {
     if(this.dirty) this.updatePath();
 
     if(this.path) {
-
-      var state = game.state.getCurrentState();
 
       // Got places to go
       if(this.path.length > 0){
@@ -120,19 +118,20 @@ function Enemy(x, y, type) {
 
       } else {
         // Reached end?
-        if(state.endTile.x == Math.round(this.body.position.x/TILEWIDTH) && state.endTile.y == Math.round(this.body.position.y/TILEHEIGHT)){
+        if(this.state.endTile.x == Math.round(this.body.position.x/TILEWIDTH) &&
+           this.state.endTile.y == Math.round(this.body.position.y/TILEHEIGHT)){
           // Stop
           this.body.velocity.x = 0;
           this.body.velocity.y = 0;
           this.destroy();
+          this.state.enemiesLeft -= 1;
           lives--;
-          state.enemiesLeft -= 1;
         }
       }
 
       if(this.props.health < 0) {
-        state.enemiesLeft -= 1;
         this.destroy();
+        this.state.enemiesLeft -= 1;
         score += this.props.score;
       }
 
@@ -141,9 +140,8 @@ function Enemy(x, y, type) {
 
   enemy.updatePath = function() {
     this.dirty = false;
-    var state = game.state.getCurrentState();
     var start_pos = this.next || this.body.position;
-    findPathTo(Math.round((start_pos.x)/TILEWIDTH),Math.round((start_pos.y)/TILEHEIGHT),state.endTile.x,state.endTile.y, (function(path) {
+    findPathTo(Math.round((start_pos.x)/TILEWIDTH),Math.round((start_pos.y)/TILEHEIGHT),this.state.endTile.x,this.state.endTile.y, (function(path) {
       this.path = path;
       this.next = undefined;
     }).bind(this));
@@ -180,7 +178,8 @@ function Tower(x, y, type) {
   tower.body.gravity.y = 0;
   //player.body.collideWorldBounds = true;
   tower.direction = (-0.5+Math.random())*(2*Math.PI);
-  // define basic walking animation
+
+  // Define tower idle/firing animations
   tower.animations.add("0_idle", [0], 300, false);
   tower.animations.add("0_fire", [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24], 30, true);
   tower.animations.add("1_idle", [25], 300, false);
@@ -210,36 +209,13 @@ function Tower(x, y, type) {
   tower.props = towerProps(type);
 
   tower.line = new Phaser.Line(0,0,0,0);
-  //Blue = nothing on range
-  //Green = enemy in range (rotating to its position)
+  //Green = nothing on range
+  //Blue = enemy in range (rotating to its position)
   //Red = firing!!!
   tower.color_line = "#00FF00";
   tower.locked = false;
   tower.state = game.state.getCurrentState();
   tower.direction = 0;
-
-  tower.findEnemiesInRange = function() {
-    //linear distance.
-
-    var inrange = this.state.enemies.children.some(function(a) {
-
-      this.line.start = this.position;
-      this.line.end = a.position;
-
-      var angle = 180 - Math.abs(Math.abs(((180*this.direction)/Math.PI) - ((180*this.line.angle)/Math.PI)) - 180);
-
-      if(this.line.width < this.props.distRange) {
-        if(angle < (this.props.angRange/2)) {
-
-          //a.reduceHealth(this.props.power);
-          return true;
-        }
-      }
-      return false;
-    }, this);
-
-    return inrange;
-  };
 
   tower.findEnemiesInLinearRange = function() {
     return this.state.enemies.children.filter((function(a) {
@@ -253,10 +229,6 @@ function Tower(x, y, type) {
   };
 
   tower.update = function() {
-    /* Pseudo algoritmo:
-    Estou lockado a algum inimigo? se sim rodar na direcção dele e CHUMBO!
-    Se não estou entao vejo se há algum ao meu alcance
-    */
     var enemiesInRange;
     var mode = "idle";
 
@@ -264,7 +236,7 @@ function Tower(x, y, type) {
     if(this.locked !== false) {
       this.line.start = this.position;
       this.line.end = this.locked.position;
-      if(this.line.width > this.props.distRange) {
+      if(this.line.length > this.props.distRange) {
         this.locked = false;
         this.color_line = "#00FF00";
       }
