@@ -1,3 +1,5 @@
+'use strict';
+
 const TILEWIDTH = 48;
 const TILEHEIGHT = 48;
 
