@@ -1,4 +1,8 @@
+/* globals Phaser */
+/* jshint esversion: 6, browser: true*/
+
 "use strict";
+var TT = TT || {};
 
 var pathfinder;
 var enemyType = ['dude','monster', 'sancho'];
@@ -50,14 +54,14 @@ var towerProps = function(type) {
   };
   return x[type];
 };
-
+/*
 function findPathTo(startx, starty, endx, endy, callback) {
   pathfinder.setGridMatrix(grid);
   pathfinder.setCallbackFunction(callback);
   pathfinder.preparePathCalculation([startx, starty], [endx, endy]);
   pathfinder.calculatePath();
 }
-
+*/
 function Enemy(x, y, type) {
   var enemy = game.add.sprite(x, y, type, 0);
 
@@ -79,7 +83,7 @@ function Enemy(x, y, type) {
   enemy.animations.add("up", [90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119], 30, true);
 
   enemy.state = game.state.getCurrentState();
-  findPathTo((x/TILEWIDTH)|0,(y/TILEHEIGHT)|0,enemy.state.endTile.x,enemy.state.endTile.y, (function(path) {
+  TT.globals.findPathTo((x/TT.globals.TILEWIDTH)|0,(y/TT.globals.TILEHEIGHT)|0, enemy.state.endTile.x, enemy.state.endTile.y, (function(path) {
     this.path = path;
   }).bind(enemy));
 
@@ -95,8 +99,8 @@ function Enemy(x, y, type) {
         //Next destination
         if(!this.next) {
           this.next = this.path.shift();
-          this.next.x *= TILEWIDTH;
-          this.next.y *= TILEHEIGHT;
+          this.next.x *= TT.globals.TILEWIDTH;
+          this.next.y *= TT.globals.TILEHEIGHT;
         }
 
         var distx = this.next.x - this.body.position.x;
@@ -104,8 +108,8 @@ function Enemy(x, y, type) {
 
         if(Math.abs(distx) < 1 && Math.abs(disty) < 1) {
           this.next = this.path.shift();
-          this.next.x *= TILEWIDTH;
-          this.next.y *= TILEHEIGHT;
+          this.next.x *= TT.globals.TILEWIDTH;
+          this.next.y *= TT.globals.TILEHEIGHT;
           distx = this.next.x - this.body.position.x;
           disty = this.next.y - this.body.position.y;
         }
@@ -118,21 +122,21 @@ function Enemy(x, y, type) {
 
       } else {
         // Reached end?
-        if(this.state.endTile.x == Math.round(this.body.position.x/TILEWIDTH) &&
-           this.state.endTile.y == Math.round(this.body.position.y/TILEHEIGHT)){
+        if(this.state.endTile.x == Math.round(this.body.position.x/TT.globals.TILEWIDTH) &&
+           this.state.endTile.y == Math.round(this.body.position.y/TT.globals.TILEHEIGHT)){
           // Stop
           this.body.velocity.x = 0;
           this.body.velocity.y = 0;
           this.destroy();
           this.state.enemiesLeft -= 1;
-          lives--;
+          TT.globals.lives--;
         }
       }
 
       if(this.props.health < 0) {
         this.destroy();
         this.state.enemiesLeft -= 1;
-        score += this.props.score;
+        TT.globals.score += this.props.score;
       }
 
     }
@@ -141,10 +145,14 @@ function Enemy(x, y, type) {
   enemy.updatePath = function() {
     this.dirty = false;
     var start_pos = this.next || this.body.position;
-    findPathTo(Math.round((start_pos.x)/TILEWIDTH),Math.round((start_pos.y)/TILEHEIGHT),this.state.endTile.x,this.state.endTile.y, (function(path) {
-      this.path = path;
-      this.next = undefined;
-    }).bind(this));
+    TT.globals.findPathTo(Math.round((start_pos.x) / TT.globals.TILEWIDTH),
+                          Math.round((start_pos.y) / TT.globals.TILEHEIGHT),
+                          this.state.endTile.x,
+                          this.state.endTile.y,
+                          (function(path) {
+                            this.path = path;
+                            this.next = undefined;
+                          }).bind(this));
   };
 
   enemy.reduceHealth = function(h) {
@@ -160,11 +168,14 @@ function createEnemy(x, y, type) {
 }
 
 function updateGrid(x, y, value) {
-  grid[x][y] = value;
+  TT.globals.grid[x][y] = value;
 }
 
 function Tower(x, y, type) {
-  var tower = game.add.sprite(x*TILEWIDTH+TILEWIDTH/2, y*TILEHEIGHT+TILEHEIGHT/2, type, 0);
+  var tower = game.add.sprite(x * TT.globals.TILEWIDTH + TT.globals.TILEWIDTH/2,
+                              y * TT.globals.TILEHEIGHT + TT.globals.TILEHEIGHT/2,
+                              type,
+                              0);
 
   tower.enableBody = true;
   tower.anchor  = {x:0.5, y:0.5};
@@ -221,7 +232,7 @@ function Tower(x, y, type) {
     return this.state.enemies.children.filter((function(a) {
       this.line.start = this.position;
       this.line.end = a.position;
-      if(this.line.width < this.props.distRange) {
+      if(this.line.length < this.props.distRange) {
         return true;
       }
       return false;
@@ -279,6 +290,7 @@ function Tower(x, y, type) {
     var frame_angle = ((360 + (180*this.direction/Math.PI)) % 360);
     var frame = Math.round(frame_angle / 30);
     this.animations.play(frame+"_"+mode);
+    this.render();
 
     return;
   };
@@ -293,9 +305,9 @@ function Tower(x, y, type) {
 
 function createTower(x, y, type) {
   var state = game.state.getCurrentState();
-  if(grid[y][x] == -1 && !(x==state.startTile.x && y==state.startTile.y) && !(x==state.endTile.x && y==state.endTile.y)){
+  if(TT.globals.grid[y][x] == -1 && !(x==state.startTile.x && y==state.startTile.y) && !(x==state.endTile.x && y==state.endTile.y)){
     updateGrid(y, x, 15);
-    findPathTo(state.startTile.x, state.startTile.y, state.endTile.x, state.endTile.y, function(path) {
+    TT.globals.findPathTo(state.startTile.x, state.startTile.y, state.endTile.x, state.endTile.y, function(path) {
       if(path) {
         state.towers.add(Tower(x, y, towerType[type]));
         state.enemies.forEach(a => {a.dirty = true;});
@@ -325,8 +337,13 @@ function createWave(interval, arr) {
   timer.arr = arr;
   var state = game.state.getCurrentState();
   timer.loop(interval, function() {
-    if(this.arr.length !== 0) createEnemy((state.startTile.x*TILEWIDTH) + (TILEWIDTH/2), (state.startTile.y*TILEHEIGHT)+(TILEHEIGHT/2), arr.shift());
-    else this.stop();
+    if(this.arr.length !== 0) {
+      createEnemy((state.startTile.x * TT.globals.TILEWIDTH) + (TT.globals.TILEWIDTH / 2),
+                  (state.startTile.y * TT.globals.TILEHEIGHT) + (TT.globals.TILEHEIGHT / 2),
+                  arr.shift());
+    } else {
+      this.stop();
+    }
   }, timer);
   timer.start();
 }
